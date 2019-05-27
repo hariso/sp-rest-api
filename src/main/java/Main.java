@@ -23,10 +23,13 @@ import java.util.List;
 import static java.lang.String.format;
 
 public class Main {
-    private static final String TENANT = "foobar";
-    private static final String CLIENT_ID = "<id>";
-    private static final String CLIENT_SECRET = "<secret>";
-    private static final String COMPLETE_URL = "https://" + TENANT + ".sharepoint.com/";
+    private static final String TENANT_SHORT = "foobar";
+    private static final String TENANT_LONG = "foobar.onmicrosoft.com";
+
+    public static final String CLIENT_ID = "<id>";
+    public static final String CLIENT_SECRET = "<secret>";
+
+    private static final String COMPLETE_URL = "https://" + TENANT_SHORT + ".sharepoint.com/";
 
     private static final CloseableHttpClient client = HttpClientBuilder.create().build();
 
@@ -62,7 +65,7 @@ public class Main {
 
     private static String getAuthToken() throws IOException {
         HttpClient client = HttpClientBuilder.create().build();
-        HttpPost request = new HttpPost(format("https://login.microsoftonline.com/%s/oauth2/v2.0/token", TENANT));
+        HttpPost request = new HttpPost(format("https://login.microsoftonline.com/%s/oauth2/v2.0/token", TENANT_LONG));
 
         request.addHeader("Content-Type", "application/x-www-form-urlencoded");
         request.addHeader("cache-control", "no-cache");
@@ -70,8 +73,18 @@ public class Main {
         List<NameValuePair> nvps = new ArrayList<>();
         nvps.add(new BasicNameValuePair("client_id", CLIENT_ID));
         nvps.add(new BasicNameValuePair("client_secret", CLIENT_SECRET));
+
+        // works
         // nvps.add(new BasicNameValuePair("scope", "https://graph.microsoft.com/.default"));
-        nvps.add(new BasicNameValuePair("scope", COMPLETE_URL + "Sites.ReadWrite.All"));
+
+        // tells me: invalid scope
+        // nvps.add(new BasicNameValuePair("scope", COMPLETE_URL + "Sites.ReadWrite.All"));
+
+        // tells me: The provided value for the input parameter 'scope' is not valid. The scope https://tenant.sharepoint.com/ is not valid.
+        nvps.add(new BasicNameValuePair("scope", COMPLETE_URL));
+
+        // tells me: The 'resource' request parameter is not supported.
+        // nvps.add(new BasicNameValuePair("resource", COMPLETE_URL));
         nvps.add(new BasicNameValuePair("grant_type", "client_credentials"));
 
         request.setEntity(new UrlEncodedFormEntity(nvps, StandardCharsets.UTF_8));
